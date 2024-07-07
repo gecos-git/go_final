@@ -62,10 +62,10 @@ func (s *Storage) GetTasks() ([]*types.Task, error) {
 		}
 
 		tasks = append(tasks, p)
-		err = rows.Err()
-		if err != nil {
-			return nil, err
-		}
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
 	}
 
 	return tasks, nil
@@ -77,6 +77,8 @@ func (s *Storage) GetTask(id string) (*types.Task, error) {
 	if err := row.Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("task no found")
+		} else {
+			return nil, err
 		}
 	}
 

@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -15,6 +16,7 @@ import (
 func (s *APIServer) CreateTask(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
+		WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -23,6 +25,7 @@ func (s *APIServer) CreateTask(w http.ResponseWriter, r *http.Request) {
 	var task *types.Task
 	err = json.Unmarshal(body, &task)
 	if err != nil {
+		WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -76,6 +79,7 @@ func (s *APIServer) GetTask(w http.ResponseWriter, r *http.Request) {
 func (s *APIServer) EditTask(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
+		WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -84,6 +88,7 @@ func (s *APIServer) EditTask(w http.ResponseWriter, r *http.Request) {
 	var task *types.Task
 	err = json.Unmarshal(body, &task)
 	if err != nil {
+		WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -130,7 +135,7 @@ func (s *APIServer) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, err := strconv.Atoi(taskID); err != nil {
-		WriteError(w, http.StatusInternalServerError, err)
+		WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -150,7 +155,7 @@ func (s *APIServer) NextDate(w http.ResponseWriter, r *http.Request) {
 
 	now, err := time.Parse("20060102", nowStr)
 	if err != nil {
-		WriteError(w, http.StatusInternalServerError, err)
+		WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
@@ -161,6 +166,6 @@ func (s *APIServer) NextDate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, err := w.Write([]byte(nextDate)); err != nil {
-		WriteError(w, http.StatusInternalServerError, err)
+		log.Fatal(err)
 	}
 }
