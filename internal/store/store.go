@@ -1,4 +1,4 @@
-package storedb
+package store
 
 import (
 	"database/sql"
@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"todo/types"
-	"todo/utils"
+	"todo/internal/service"
+	"todo/internal/types"
 )
 
 type Store interface {
@@ -47,10 +47,12 @@ func (s *Storage) CreateTask(t *types.Task) (*types.Task, error) {
 }
 
 func (s *Storage) GetTasks() ([]*types.Task, error) {
-	rows, err := s.db.Query(`SELECT * FROM scheduler ORDER BY date ASC LIMIT 50`)
+	const limit = 50
+	rows, err := s.db.Query(`SELECT * FROM scheduler ORDER BY date ASC LIMIT ?`, limit)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	tasks := make([]*types.Task, 0)
 	for rows.Next() {
@@ -60,30 +62,25 @@ func (s *Storage) GetTasks() ([]*types.Task, error) {
 		}
 
 		tasks = append(tasks, p)
+		err = rows.Err()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return tasks, nil
 }
 
 func (s *Storage) GetTask(id string) (*types.Task, error) {
-	rows, err := s.db.Query("SELECT * FROM scheduler WHERE id = ?", id)
-
-	if err != nil {
+	row := s.db.QueryRow("SELECT * FROM scheduler WHERE id = ?", id)
+	var task types.Task
+	if err := row.Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat); err != nil {
 		if err == sql.ErrNoRows {
-			return nil, err
-		}
-		return nil, err
-	}
-
-	p := new(types.Task)
-	for rows.Next() {
-		p, err = scanRowsIntoScheduler(rows)
-		if err != nil {
-			return nil, err
+			return nil, errors.New("task no found")
 		}
 	}
 
-	return p, nil
+	return &task, nil
 }
 
 func (s *Storage) PutTask(t *types.Task) error {
@@ -107,7 +104,6 @@ func (s *Storage) PutTask(t *types.Task) error {
 
 func (s *Storage) DoneTask(id string) error {
 	task, err := s.GetTask(id)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return err
@@ -120,7 +116,7 @@ func (s *Storage) DoneTask(id string) error {
 			return err
 		}
 	} else {
-		nextDate, err := utils.NextDate(time.Now(), task.Date, task.Repeat)
+		nextDate, err := service.NextDate(time.Now(), task.Date, task.Repeat)
 		if err != nil {
 			return err
 		}

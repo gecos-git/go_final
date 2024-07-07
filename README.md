@@ -9,7 +9,7 @@
 | '/api/task'      | GET       | получение задачи                |
 | '/api/task'      | PUT       | редактирование задачи           |
 | '/api/task'      | DELETE    | удаление задачи                 |
-| '/api/tasks'     | GET       | получение списка задач       |
+| '/api/tasks'     | GET       | получение списка задач          |
 | '/api/nextdate'  | GET       | получение следующей даты задачи |
 | '/api/task/done' | POST      | фиксация выполнения задачи      |
 
@@ -29,7 +29,7 @@
 ```shell
 git clone git@github.com:gecos-git/go_final.git
 
-cd go_final_project
+cd go_final
 ```
 2. Подтягиваем зависимости:
 ```shell
@@ -46,9 +46,22 @@ make run
 5. Запускаем тесты:
 ```shell
 make test
-
+```
 
 Адрес запущенного приложения:
 http://localhost:7540/
 
 Выход из приложения: ```Ctrl+C```
+
+
+# Запуск в Docker
+
+Собираем:
+```shell
+docker build -t todo:latest .
+```
+
+Запускаем:
+```shell
+docker run -p 127.0.0.1:7540:7540 todo:latest
+```

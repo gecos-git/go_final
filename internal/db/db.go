@@ -1,4 +1,4 @@
-package storedb
+package db
 
 import (
 	"database/sql"
@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"todo/config"
-
 	_ "github.com/mattn/go-sqlite3"
+
+	"todo/config"
 )
 
 type SQLStorage struct {

@@ -17,7 +17,7 @@ func initConfig() Config {
 	godotenv.Load()
 
 	return Config{
-		Port:   getEnv("TODO_PORT", ":7540"),
+		Port:   getEnv("TODO_PORT", "7540"),
 		DBfile: getEnv("TODO_DBFILE", "scheduler.db"),
 	}
 }
