@@ -7,7 +7,7 @@ import (
 	"todo/config"
 	"todo/internal/api"
 	"todo/internal/db"
-	"todo/internal/store"
+	"todo/internal/service/tasks"
 )
 
 func main() {
@@ -19,7 +19,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	store := store.NewStore(db)
+	store := tasks.NewStore(db)
 
 	server := api.NewAPIServer(fmt.Sprintf(":%s", config.Envs.Port), store)
 	if err := server.Run(); err != nil {

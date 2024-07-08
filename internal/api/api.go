@@ -4,17 +4,17 @@ import (
 	"log"
 	"net/http"
 
-	"todo/internal/store"
+	"todo/internal/service/tasks"
 )
 
 var webDir = "./web/"
 
 type APIServer struct {
 	addr  string
-	store store.Store
+	store tasks.Store
 }
 
-func NewAPIServer(addr string, store store.Store) *APIServer {
+func NewAPIServer(addr string, store tasks.Store) *APIServer {
 	return &APIServer{
 		addr:  addr,
 		store: store,

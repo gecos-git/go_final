@@ -1,4 +1,4 @@
-package store
+package tasks
 
 import (
 	"database/sql"
@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"todo/internal/service"
+	service "todo/internal/nextdate"
 	"todo/internal/types"
 )
 

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"todo/internal/service"
+	"todo/internal/nextdate"
 	"todo/internal/types"
 )
 
@@ -35,7 +35,7 @@ func validateTaskPayload(task *types.Task) error {
 	if task.Repeat == "d 1" || task.Repeat == "d 5" || task.Repeat == "d 3" {
 		task.Date = time.Now().Format(timeStamp)
 	} else if task.Repeat != "" {
-		task.Date, err = service.NextDate(time.Now(), task.Date, task.Repeat)
+		task.Date, err = nextdate.NextDate(time.Now(), task.Date, task.Repeat)
 		if err != nil {
 			return errRepeatRequired
 		}
@@ -67,7 +67,7 @@ func validateTaskUpdate(task *types.Task) error {
 	}
 
 	if task.Repeat != "" {
-		task.Date, err = service.NextDate(time.Now(), task.Date, task.Repeat)
+		task.Date, err = nextdate.NextDate(time.Now(), task.Date, task.Repeat)
 		if err != nil {
 			return errRepeatRequired
 		}

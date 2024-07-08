@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"todo/internal/service"
+	"todo/internal/nextdate"
 	"todo/internal/types"
 )
 
@@ -159,7 +159,7 @@ func (s *APIServer) NextDate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nextDate, err := service.NextDate(now, dateStr, repeatStr)
+	nextDate, err := nextdate.NextDate(now, dateStr, repeatStr)
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, err)
 		return

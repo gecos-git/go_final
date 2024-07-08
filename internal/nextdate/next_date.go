@@ -1,4 +1,4 @@
-package service
+package nextdate
 
 import (
 	"errors"
