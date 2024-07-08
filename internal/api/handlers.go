@@ -166,6 +166,6 @@ func (s *APIServer) NextDate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, err := w.Write([]byte(nextDate)); err != nil {
-		log.Fatal(err)
+		log.Println("Ошибка при записи даты:", err)
 	}
 }
