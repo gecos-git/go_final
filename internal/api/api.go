@@ -4,20 +4,20 @@ import (
 	"log"
 	"net/http"
 
-	"todo/internal/service/tasks"
+	"todo/internal/handlers"
 )
 
 var webDir = "./web/"
 
 type APIServer struct {
-	addr  string
-	store tasks.Store
+	addr     string
+	handlers handlers.Handler
 }
 
-func NewAPIServer(addr string, store tasks.Store) *APIServer {
+func NewAPIServer(addr string, handlers handlers.Handler) *APIServer {
 	return &APIServer{
-		addr:  addr,
-		store: store,
+		addr:     addr,
+		handlers: handlers,
 	}
 }
 
@@ -28,25 +28,25 @@ func (s *APIServer) Run() error {
 	router.Handle("/", http.FileServer(http.Dir(webDir)))
 
 	// Создание задачи
-	router.HandleFunc("POST /api/task", s.CreateTask)
+	router.HandleFunc("POST /api/task", s.handlers.CreateTask)
 
 	// Получение списка задач
-	router.HandleFunc("GET /api/tasks", s.ListTasks)
+	router.HandleFunc("GET /api/tasks", s.handlers.ListTasks)
 
 	// Получение задачи
-	router.HandleFunc("GET /api/task", s.GetTask)
+	router.HandleFunc("GET /api/task", s.handlers.GetTask)
 
 	// Редактирование задачи
-	router.HandleFunc("PUT /api/task", s.EditTask)
+	router.HandleFunc("PUT /api/task", s.handlers.EditTask)
 
 	// Отметить выполненой задачу
-	router.HandleFunc("POST /api/task/done", s.DoneTask)
+	router.HandleFunc("POST /api/task/done", s.handlers.DoneTask)
 
 	// Удалить задачу
-	router.HandleFunc("DELETE /api/task", s.DeleteTask)
+	router.HandleFunc("DELETE /api/task", s.handlers.DeleteTask)
 
 	// Да
-	router.HandleFunc("GET /api/nextdate", s.NextDate)
+	router.HandleFunc("GET /api/nextdate", s.handlers.NextDate)
 
 	server := http.Server{
 		Addr:    s.addr,

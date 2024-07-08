@@ -1,4 +1,4 @@
-package api
+package handlers
 
 import (
 	"encoding/json"
@@ -9,11 +9,40 @@ import (
 	"time"
 
 	"todo/internal/nextdate"
+	service "todo/internal/service/tasks"
 	"todo/internal/types"
 )
 
+type Handler struct {
+	service *service.Service
+}
+
+func NewHandler(service *service.Service) *Handler {
+	return &Handler{service: service}
+}
+
+func (h *Handler) TaskHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		h.CreateTask(w, r)
+	case http.MethodGet:
+		h.GetTask(w, r)
+	case http.MethodPut:
+		h.EditTask(w, r)
+	case http.MethodDelete:
+		h.DeleteTask(w, r)
+	default:
+		log.Println("неверный метод")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": "неверный метод"}); err != nil {
+			log.Println(err)
+		}
+		return
+	}
+}
+
 // Создание задачи
-func (s *APIServer) CreateTask(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		WriteError(w, http.StatusBadRequest, err)
@@ -34,7 +63,7 @@ func (s *APIServer) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t, err := s.store.CreateTask(task)
+	t, err := h.service.CreateTask(task)
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -44,8 +73,8 @@ func (s *APIServer) CreateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 // Получение списка задач
-func (s *APIServer) ListTasks(w http.ResponseWriter, r *http.Request) {
-	tasks, err := s.store.GetTasks()
+func (h *Handler) ListTasks(w http.ResponseWriter, r *http.Request) {
+	tasks, err := h.service.GetTasks()
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, err)
 		return
@@ -55,14 +84,14 @@ func (s *APIServer) ListTasks(w http.ResponseWriter, r *http.Request) {
 }
 
 // Получение задачи
-func (s *APIServer) GetTask(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetTask(w http.ResponseWriter, r *http.Request) {
 	taskID := r.URL.Query().Get("id")
 	if taskID == "" {
 		WriteJSON(w, http.StatusBadRequest, types.ErrorResponse{Error: "Не указан идентификатор"})
 		return
 	}
 
-	task, err := s.store.GetTask(taskID)
+	task, err := h.service.GetTask(taskID)
 	if err != nil {
 		if err.Error() == "task not found" {
 			WriteError(w, http.StatusNotFound, err)
@@ -76,7 +105,7 @@ func (s *APIServer) GetTask(w http.ResponseWriter, r *http.Request) {
 }
 
 // Редактирование задачи
-func (s *APIServer) EditTask(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) EditTask(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, err)
@@ -97,7 +126,7 @@ func (s *APIServer) EditTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.store.PutTask(task); err != nil {
+	if err := h.service.PutTask(task); err != nil {
 		if err != nil {
 			WriteError(w, http.StatusInternalServerError, err)
 		}
@@ -108,13 +137,13 @@ func (s *APIServer) EditTask(w http.ResponseWriter, r *http.Request) {
 }
 
 // Отметить задачу выполненой
-func (s *APIServer) DoneTask(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DoneTask(w http.ResponseWriter, r *http.Request) {
 	taskID := r.URL.Query().Get("id")
 	if taskID == "" {
 		WriteJSON(w, http.StatusBadRequest, types.ErrorResponse{Error: "Не указан идентификатор"})
 		return
 	}
-	if err := s.store.DoneTask(taskID); err != nil {
+	if err := h.service.DoneTask(taskID); err != nil {
 		if err.Error() == "task not found" {
 			WriteError(w, http.StatusNotFound, err)
 		} else {
@@ -127,7 +156,7 @@ func (s *APIServer) DoneTask(w http.ResponseWriter, r *http.Request) {
 }
 
 // Удалить задачу
-func (s *APIServer) DeleteTask(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 	taskID := r.URL.Query().Get("id")
 	if taskID == "" {
 		WriteJSON(w, http.StatusBadRequest, types.ErrorResponse{Error: "Не указан идентификатор"})
@@ -139,7 +168,7 @@ func (s *APIServer) DeleteTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.store.DeleteTask(taskID); err != nil {
+	if err := h.service.DeleteTask(taskID); err != nil {
 		WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
@@ -148,7 +177,7 @@ func (s *APIServer) DeleteTask(w http.ResponseWriter, r *http.Request) {
 }
 
 // Да
-func (s *APIServer) NextDate(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) NextDate(w http.ResponseWriter, r *http.Request) {
 	nowStr := r.FormValue("now")
 	dateStr := r.FormValue("date")
 	repeatStr := r.FormValue("repeat")

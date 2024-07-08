@@ -7,7 +7,9 @@ import (
 	"todo/config"
 	"todo/internal/api"
 	"todo/internal/db"
+	"todo/internal/handlers"
 	"todo/internal/service/tasks"
+	"todo/internal/store"
 )
 
 func main() {
@@ -19,9 +21,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	store := tasks.NewStore(db)
+	store := store.NewStore(db)
+	service := service.NewService(store)
+	handlers := handlers.NewHandler(service)
 
-	server := api.NewAPIServer(fmt.Sprintf(":%s", config.Envs.Port), store)
+	server := api.NewAPIServer(fmt.Sprintf(":%s", config.Envs.Port), *handlers)
 	if err := server.Run(); err != nil {
 		log.Fatal(err)
 	}

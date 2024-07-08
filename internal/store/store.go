@@ -1,12 +1,10 @@
-package tasks
+package store
 
 import (
 	"database/sql"
 	"errors"
 	"strconv"
-	"time"
 
-	service "todo/internal/nextdate"
 	"todo/internal/types"
 )
 
@@ -15,17 +13,25 @@ type Store interface {
 	GetTasks() ([]*types.Task, error)
 	GetTask(string) (*types.Task, error)
 	PutTask(*types.Task) error
-	DoneTask(string) error
 	DeleteTask(string) error
+	UpdateTaskDate(nextDate string, id string) error
+}
+
+type Todo struct {
+	Store
 }
 
 type Storage struct {
 	db *sql.DB
 }
 
-func NewStore(db *sql.DB) *Storage {
-	return &Storage{
-		db: db,
+func StorageSQLite(db *sql.DB) *Storage {
+	return &Storage{db: db}
+}
+
+func NewStore(db *sql.DB) *Todo {
+	return &Todo{
+		Store: StorageSQLite(db),
 	}
 }
 
@@ -99,33 +105,6 @@ func (s *Storage) PutTask(t *types.Task) error {
 
 	if rowsAffected == 0 {
 		return errors.New("task not found")
-	}
-
-	return nil
-}
-
-func (s *Storage) DoneTask(id string) error {
-	task, err := s.GetTask(id)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return err
-		}
-		return err
-	}
-
-	if task.Repeat == "" {
-		if err := s.DeleteTask(id); err != nil {
-			return err
-		}
-	} else {
-		nextDate, err := service.NextDate(time.Now(), task.Date, task.Repeat)
-		if err != nil {
-			return err
-		}
-
-		if err := s.UpdateTaskDate(nextDate, id); err != nil {
-			return err
-		}
 	}
 
 	return nil
